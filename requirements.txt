@@ -1,3 +1,4 @@
 streamlit
 pandas
 plotly
+# 서버 관리자(스트림릿)에게 요청하는 것
