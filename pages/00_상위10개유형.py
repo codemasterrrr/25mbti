@@ -3,7 +3,7 @@ import pandas as pd
 import altair as alt
 import re
 
-st.set_page_config(page_title="MBTI 상위 10개국 — Altair(세로/약어)", layout="wide")
+st.set_page_config(page_title="MBTI 상위 10개국", layout="wide")
 
 # 제목 & 설명
 st.title("🌍 MBTI 상위 10개국 — 세로 막대 + 국가 약어")
