@@ -29,12 +29,15 @@ if len(mbti_cols) != 16:
     st.warning(f"MBTI 컬럼 수가 16개가 아닙니다. 현재 {len(mbti_cols)}개가 감지되었습니다.")
 
 # =========================
-# 3) 사이드바: 국가 선택
+# 3) 메인 화면에서 국가 선택 (⭐ 사이드바 대신 메인)
 # =========================
-st.sidebar.header("🎛️ 설정")
 countries = df["Country"].dropna().sort_values().tolist()
 default_idx = countries.index("Korea, South") if "Korea, South" in countries else 0
-selected_country = st.sidebar.selectbox("국가를 선택하세요:", countries, index=default_idx)
+
+st.subheader("🎛️ 국가 선택")
+selected_country = st.selectbox("분석할 국가를 선택하세요:", countries, index=default_idx, key="country_select")
+
+st.divider()
 
 # =========================
 # 4) 선택 국가의 데이터 추출/정리
@@ -53,35 +56,36 @@ country_df = (
 )
 
 # =========================
-# 5) 색상 팔레트 설정 (센스있게 ✨)
-#    - Set3 계열의 부드러운 파스텔톤
+# 5) 색상 팔레트 (부드러운 파스텔톤 ✨)
 # =========================
 palette = px.colors.qualitative.Set3
-# 그래도 16개 MBTI 전용으로 길이를 맞춰줍니다 (부족하면 반복)
 while len(palette) < len(country_df):
     palette = palette + palette
 
 # =========================
-# 6) 그래프: 가로형 막대 (값은 %로 라벨/툴팁)
+# 6) 그래프: 세로형 막대 (x=MBTI, y=Value)
+#    - y축은 % 포맷, x축은 MBTI 유형
+#    - 막대 순서는 값 기준 내림차순
 # =========================
-st.subheader(f"🧠 {selected_country}의 MBTI 분포 (상위→하위)")
+st.subheader(f"🧠 {selected_country}의 MBTI 분포 (높은 순)")
 fig = px.bar(
     country_df,
-    x="Value",
-    y="MBTI",
-    orientation="h",
+    x="MBTI",
+    y="Value",
     color="MBTI",
     color_discrete_sequence=palette[: len(country_df)],
     hover_data={"Value": ":.2%"},
 )
 
+# 카테고리 순서를 값 기준으로 정렬
 fig.update_layout(
-    xaxis_title="비율 (%)",
-    yaxis_title="MBTI 유형",
+    xaxis_title="MBTI 유형",
+    yaxis_title="비율 (%)",
     legend_title="MBTI",
     margin=dict(l=10, r=10, t=40, b=10),
 )
-fig.update_xaxes(tickformat=".0%")
+fig.update_yaxes(tickformat=".0%")
+fig.update_xaxes(categoryorder="array", categoryarray=country_df["MBTI"].tolist())
 
 st.plotly_chart(fig, use_container_width=True)
 
@@ -95,4 +99,4 @@ st.dataframe(show_pct[["MBTI", "비율(%)"]], use_container_width=True)
 # =========================
 # 8) 작은 팁
 # =========================
-st.info("✨ 팁: 사이드바에서 국가를 바꾸면 그래프와 표가 함께 갱신됩니다!")
+st.info("✨ 팁: 위의 드롭다운에서 국가를 바꾸면 그래프와 표가 함께 갱신됩니다!")
