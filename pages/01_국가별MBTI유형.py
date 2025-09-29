@@ -29,7 +29,7 @@ if len(mbti_cols) != 16:
     st.warning(f"MBTI 컬럼 수가 16개가 아닙니다. 현재 {len(mbti_cols)}개가 감지되었습니다.")
 
 # =========================
-# 3) 메인 화면에서 국가 선택 (⭐ 사이드바 대신 메인)
+# 3) 메인 화면에서 국가 선택
 # =========================
 countries = df["Country"].dropna().sort_values().tolist()
 default_idx = countries.index("Korea, South") if "Korea, South" in countries else 0
@@ -40,19 +40,20 @@ selected_country = st.selectbox("분석할 국가를 선택하세요:", countrie
 st.divider()
 
 # =========================
-# 4) 선택 국가의 데이터 추출/정리
+# 4) 선택 국가의 데이터 추출/정리 (버그 수정!)
 # =========================
 row = df.loc[df["Country"] == selected_country, mbti_cols]
 if row.empty:
     st.error("해당 국가 데이터를 찾을 수 없습니다.")
     st.stop()
 
-series = row.iloc[0].copy()
+# 핵심 수정: 인덱스 숫자(0/1/2...)와 무관하게 컬럼명을 고정
+series = row.squeeze()  # 16개 값의 Series
+country_df = series.reset_index()
+country_df.columns = ["MBTI", "Value"]  # <-- 항상 이 두 컬럼명으로 고정
 country_df = (
-    series.reset_index()
-          .rename(columns={"index": "MBTI", 0: "Value"})
-          .sort_values("Value", ascending=False)
-          .reset_index(drop=True)
+    country_df.sort_values("Value", ascending=False)
+              .reset_index(drop=True)
 )
 
 # =========================
@@ -64,8 +65,6 @@ while len(palette) < len(country_df):
 
 # =========================
 # 6) 그래프: 세로형 막대 (x=MBTI, y=Value)
-#    - y축은 % 포맷, x축은 MBTI 유형
-#    - 막대 순서는 값 기준 내림차순
 # =========================
 st.subheader(f"🧠 {selected_country}의 MBTI 분포 (높은 순)")
 fig = px.bar(
@@ -76,8 +75,6 @@ fig = px.bar(
     color_discrete_sequence=palette[: len(country_df)],
     hover_data={"Value": ":.2%"},
 )
-
-# 카테고리 순서를 값 기준으로 정렬
 fig.update_layout(
     xaxis_title="MBTI 유형",
     yaxis_title="비율 (%)",
